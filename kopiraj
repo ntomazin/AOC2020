@@ -1,0 +1,5 @@
+#!/bin/bash
+for i in {4..25}
+do
+   cp "day2_in" "day2.go" "day$i/" 
+done

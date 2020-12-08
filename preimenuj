@@ -1,0 +1,7 @@
+#!/bin/bash
+for i in {3..25}
+do
+   mv "day$i/day\$i_in" "day$i/day$i_in"
+   #mv "day$i/day2.go" "day$i/day$i.go"
+ 
+done
