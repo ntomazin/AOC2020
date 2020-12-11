@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -14,7 +13,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day11_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -33,10 +32,10 @@ func main() {
 	// new line using the bufio.Scanner.Scan()
 	// method.
 	scanner.Split(bufio.ScanLines)
-	var text []string
+	var text [][]string
 
 	for scanner.Scan() {
-		text = append(text, scanner.Text())
+		text = append(text, strings.Split(scanner.Text(), ""))
 	}
 
 	// The method os.File.Close() is called
@@ -47,45 +46,111 @@ func main() {
 	part2(text)
 }
 
-func part1(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+func part1(text [][]string) {
+	for {
+		changed := false
+		seats := make([][]string, len(text))
+		for i := range text {
+			seats[i] = make([]string, len(text[i]))
+			copy(seats[i], text[i])
 		}
 
+		for i, _ := range text {
+			for j, _ := range text[i] {
+				if text[i][j] == "L" && countNeighbors(text, i, j, false) == 0 {
+					seats[i][j] = "#"
+					changed = true
+				} else if text[i][j] == "#" && countNeighbors(text, i, j, false) >= 4 {
+					seats[i][j] = "L"
+					changed = true
+				}
+			}
+		}
+		text = seats
+
+		if !changed {
+			break
+		}
 	}
-	fmt.Println(counter)
+	output := ""
+	for i, _ := range text {
+		output = output + strings.Join(text[i], "")
+	}
+	fmt.Println(strings.Count(output, "#"))
 }
 
-func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
+func part2(text [][]string) {
+	for {
+		changed := false
+		seats := copyMatrix(text)
 
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
+		for i, _ := range text {
+			for j, _ := range text[i] {
+				if text[i][j] == "L" && countNeighbors(text, i, j, true) == 0 {
+					seats[i][j] = "#"
+					changed = true
+				} else if text[i][j] == "#" && countNeighbors(text, i, j, true) >= 5 {
+					seats[i][j] = "L"
+					changed = true
+				}
+			}
 		}
+		text = seats
+
+		if !changed {
+			break
+		}
+	}
+	output := ""
+	for i, _ := range text {
+		output = output + strings.Join(text[i], "")
+	}
+	fmt.Println(strings.Count(output, "#"))
+}
+
+func countNeighbors(seats [][]string, positionX int, positionY int, visible bool) int {
+	counterNeighbor := 0
+	offset := 0
+
+	if visible {
 
 	}
-	fmt.Println(counter)
+	positionX = positionX + offset
+	positionY = positionY + offset
+
+	if positionX != len(seats)-1 && seats[positionX+1][positionY] == "#" {
+		counterNeighbor++
+	}
+	if positionX != 0 && seats[positionX-1][positionY] == "#" {
+		counterNeighbor++
+	}
+	if positionY != len(seats[0])-1 && seats[positionX][positionY+1] == "#" {
+		counterNeighbor++
+	}
+	if positionY != 0 && seats[positionX][positionY-1] == "#" {
+		counterNeighbor++
+	}
+	if positionX != 0 && positionY != 0 && seats[positionX-1][positionY-1] == "#" {
+		counterNeighbor++
+	}
+	if positionY != 0 && positionX != len(seats)-1 && seats[positionX+1][positionY-1] == "#" {
+		counterNeighbor++
+	}
+	if positionX != 0 && positionY != len(seats[0])-1 && seats[positionX-1][positionY+1] == "#" {
+		counterNeighbor++
+	}
+	if positionX != len(seats)-1 && positionY != len(seats[0])-1 && seats[positionX+1][positionY+1] == "#" {
+		counterNeighbor++
+	}
+
+	return counterNeighbor
+}
+
+func copyMatrix(text [][]string) [][]string {
+	seats := make([][]string, len(text))
+	for i := range text {
+		seats[i] = make([]string, len(text[i]))
+		copy(seats[i], text[i])
+	}
+	return seats
 }

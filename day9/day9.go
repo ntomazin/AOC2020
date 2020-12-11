@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
-	"strings"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day9_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -50,42 +50,57 @@ func main() {
 func part1(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
+	var queue []int
+	isValid := false
 	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+		num, _ := strconv.Atoi(each_ln1)
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+		if len(queue) < 25 {
+			queue = append(queue, num)
+			continue
 		}
+		if len(queue) >= 25 {
+			isValid = false
+			for _, elem1 := range queue {
+				if isValid {
+					break
+				}
+				for _, elem2 := range queue {
+					if elem1+elem2 == num {
+						queue = queue[1:len(queue)] // Dequeue
+						queue = append(queue, num)
+						isValid = true
+					}
+				}
+			}
 
+		}
+		if !isValid {
+			fmt.Println(each_ln1)
+			return
+		}
 	}
-	fmt.Println(counter)
 }
 
 func part2(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
-
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
-
+	xmas := make([]int, len(text))
+	for i, s := range text {
+		xmas[i], _ = strconv.Atoi(s)
 	}
-	fmt.Println(counter)
+	invalidNumber := 15690279
+	for i := 0; i < len(xmas); i++ {
+		for j := i + 1; j < len(xmas); j++ {
+			sum := 0
+			for _, v := range xmas[i : j+1] {
+				sum += v
+			}
+			if sum == invalidNumber {
+				sort.Ints(xmas[i : j+1])
+				fmt.Println(xmas[i] + xmas[j])
+				return
+			}
+		}
+	}
 }

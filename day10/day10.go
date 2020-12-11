@@ -5,87 +5,58 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
-	"strings"
 )
 
 func main() {
-
-	// os.Open() opens specific file in
-	// read-only mode and this return
-	// a pointer of type os.
-	file, err := os.Open("day2_in")
-
+	file, err := os.Open("day10_in")
 	if err != nil {
 		log.Fatalf("failed to open")
-
 	}
 
-	// The bufio.NewScanner() function is called in which the
-	// object os.File passed as its parameter and this returns a
-	// object bufio.Scanner which is further used on the
-	// bufio.Scanner.Split() method.
 	scanner := bufio.NewScanner(file)
-
-	// The bufio.ScanLines is used as an
-	// input to the method bufio.Scanner.Split()
-	// and then the scanning forwards to each
-	// new line using the bufio.Scanner.Scan()
-	// method.
 	scanner.Split(bufio.ScanLines)
-	var text []string
 
+	var input []int
 	for scanner.Scan() {
-		text = append(text, scanner.Text())
+		v := scanner.Text()
+		in, _ := strconv.Atoi(v)
+		input = append(input, in)
 	}
 
-	// The method os.File.Close() is called
-	// on the os.File object to close the file
 	file.Close()
 
-	part1(text)
-	part2(text)
+	part1(input)
+	part2(input)
 }
 
-func part1(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+func part1(input []int) {
+	sort.Ints(input)
+	counter1 := 1
+	counter3 := 1
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	for i, _ := range input {
+		if i == 0 {
+			continue
 		}
-
+		if input[i]-input[i-1] == 1 {
+			counter1++
+		} else if input[i]-input[i-1] == 3 {
+			counter3++
+		}
 	}
-	fmt.Println(counter)
+	fmt.Println(counter1 * counter3)
 }
 
-func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
+func part2(input []int) {
+	sort.Ints(input)
+	permutation := map[int]int{0: 1}
 
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
-
+	for _, i := range input {
+		permutation[i] = permutation[i-1] + permutation[i-2] + permutation[i-3]
 	}
-	fmt.Println(counter)
+
+	fmt.Println(permutation[input[len(input)-1]])
+
 }
