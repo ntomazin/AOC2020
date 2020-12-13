@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -14,7 +15,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day13_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -50,42 +51,42 @@ func main() {
 func part1(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+	minutes, _ := strconv.Atoi(text[0])
+	timestamps := strings.Split(text[1], ",")
+	minWait := 9999999
+	bestId := -1
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	for _, timestamp := range timestamps {
+		if timestamp == "x" {
+			continue
 		}
+		id, _ := strconv.Atoi(timestamp)
 
+		waitTime := int(math.Floor(float64(minutes/id)) + 1)
+		if minWait > ((waitTime * id) % minutes) {
+			bestId = id
+			minWait = ((waitTime * id) % minutes)
+		}
 	}
-	fmt.Println(counter)
+	fmt.Println(bestId * minWait)
+
 }
 
 func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
+	timestamps := strings.Split(text[1], ",")
+	start := 0
+	step := 1
+
+	for i, s := range timestamps {
+		bus, err := strconv.Atoi(s)
+		if err != nil {
+			continue
 		}
 
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
+		for (start+i)%bus != 0 {
+			start += step
 		}
-
+		step *= bus
 	}
-	fmt.Println(counter)
+	fmt.Println(start)
 }

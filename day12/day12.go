@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
+	"math/cmplx"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day12_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -47,45 +48,71 @@ func main() {
 	part2(text)
 }
 
+type Position struct {
+	xAxis int
+	yAxis int
+}
+
 func part1(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+	position := 0 + 0i
+	direction := 1 + 0i
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	for _, each_ln1 := range text {
+		command := string(each_ln1[0])
+		length, _ := strconv.Atoi(each_ln1[1:len(each_ln1)])
+		lengthCmplx := complex(float64(length), 0)
+
+		switch command {
+		case "N":
+			position += lengthCmplx
+		case "E":
+			position += lengthCmplx
+		case "S":
+			position -= lengthCmplx * 1i
+		case "W":
+			position -= lengthCmplx
+		case "L":
+			direction *= cmplx.Pow(1i, (lengthCmplx / complex(float64(90), 0)))
+		case "R":
+			direction /= cmplx.Pow(1i, (lengthCmplx / complex(float64(90), 0)))
+		case "F":
+			position += lengthCmplx * (direction / complex(cmplx.Abs(direction), 0))
 		}
 
 	}
-	fmt.Println(counter)
+	//fmt.Println(cmplx.Abs(position))
+	fmt.Println(math.Abs(real(position)) + math.Abs(imag(position)))
 }
 
 func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
+	position := 0 + 0i
+	direction := 10 + 1i
 
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
+	for _, each_ln1 := range text {
+		command := string(each_ln1[0])
+		length, _ := strconv.Atoi(each_ln1[1:len(each_ln1)])
+		lengthCmplx := complex(float64(length), 0)
+
+		switch command {
+		case "N":
+			position += lengthCmplx
+		case "E":
+			position += lengthCmplx
+		case "S":
+			position -= lengthCmplx * 1i
+		case "W":
+			position -= lengthCmplx
+		case "L":
+			direction *= cmplx.Pow(1i, (lengthCmplx / complex(float64(90), 0)))
+		case "R":
+			direction /= cmplx.Pow(1i, (lengthCmplx / complex(float64(90), 0)))
+		case "F":
+			position += lengthCmplx * direction
 		}
 
 	}
-	fmt.Println(counter)
+	//fmt.Println(cmplx.Abs(position))
+	fmt.Println(math.Abs(real(position)) + math.Abs(imag(position)))
 }
