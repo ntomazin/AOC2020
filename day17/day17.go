@@ -1,91 +1,82 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"log"
-	"os"
-	"strconv"
+	"io/ioutil"
 	"strings"
+	"time"
 )
 
+type Point [4]int
+
+func (p Point) Add(q Point) Point {
+	for i := range p {
+		p[i] += q[i]
+	}
+	return p
+}
+
 func main() {
+	input, _ := ioutil.ReadFile("day17_in")
 
-	// os.Open() opens specific file in
-	// read-only mode and this return
-	// a pointer of type os.
-	file, err := os.Open("day2_in")
-
-	if err != nil {
-		log.Fatalf("failed to open")
-
+	grid := map[Point]rune{}
+	for y, s := range strings.Fields(string(input)) {
+		for x, r := range s {
+			grid[Point{x, y}] = r
+		}
 	}
+	startTime := time.Now()
+	fmt.Println(run(grid, 3, 6))
+	fmt.Println("Part 1 took:", time.Since(startTime))
 
-	// The bufio.NewScanner() function is called in which the
-	// object os.File passed as its parameter and this returns a
-	// object bufio.Scanner which is further used on the
-	// bufio.Scanner.Split() method.
-	scanner := bufio.NewScanner(file)
-
-	// The bufio.ScanLines is used as an
-	// input to the method bufio.Scanner.Split()
-	// and then the scanning forwards to each
-	// new line using the bufio.Scanner.Scan()
-	// method.
-	scanner.Split(bufio.ScanLines)
-	var text []string
-
-	for scanner.Scan() {
-		text = append(text, scanner.Text())
-	}
-
-	// The method os.File.Close() is called
-	// on the os.File object to close the file
-	file.Close()
-
-	part1(text)
-	part2(text)
+	startTime = time.Now()
+	fmt.Println(run(grid, 4, 6))
+	fmt.Println("Part 2 took:", time.Since(startTime))
 }
 
-func part1(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+func run(grid map[Point]rune, dim, cycles int) (sum int) {
+	delta := delta(dim)[1:]
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	for i := 0; i < cycles; i++ {
+		for p := range grid {
+			for _, d := range delta {
+				grid[p.Add(d)] = grid[p.Add(d)]
+			}
 		}
 
+		new := map[Point]rune{}
+		for p, r := range grid {
+			neigh := 0
+			for _, d := range delta {
+				if grid[p.Add(d)] == '#' {
+					neigh++
+				}
+			}
+
+			if r == '#' && neigh == 2 || neigh == 3 {
+				new[p] = '#'
+			}
+		}
+		grid = new
 	}
-	fmt.Println(counter)
+
+	for _, r := range grid {
+		if r == '#' {
+			sum++
+		}
+	}
+	return
 }
 
-func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
-
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
-
+func delta(dim int) (ds []Point) {
+	if dim == 0 {
+		return []Point{{}}
 	}
-	fmt.Println(counter)
+	for _, v := range []int{0, 1, -1} {
+		for _, p := range delta(dim - 1) {
+			p[dim-1] = v
+			ds = append(ds, p)
+		}
+	}
+	return
 }

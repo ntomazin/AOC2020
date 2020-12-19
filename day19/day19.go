@@ -7,31 +7,19 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
-
-	// os.Open() opens specific file in
-	// read-only mode and this return
-	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day19_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
 
 	}
 
-	// The bufio.NewScanner() function is called in which the
-	// object os.File passed as its parameter and this returns a
-	// object bufio.Scanner which is further used on the
-	// bufio.Scanner.Split() method.
 	scanner := bufio.NewScanner(file)
 
-	// The bufio.ScanLines is used as an
-	// input to the method bufio.Scanner.Split()
-	// and then the scanning forwards to each
-	// new line using the bufio.Scanner.Scan()
-	// method.
 	scanner.Split(bufio.ScanLines)
 	var text []string
 
@@ -39,53 +27,94 @@ func main() {
 		text = append(text, scanner.Text())
 	}
 
-	// The method os.File.Close() is called
-	// on the os.File object to close the file
 	file.Close()
 
+	startTime := time.Now()
 	part1(text)
-	part2(text)
+	fmt.Println("Part 1 took:", time.Since(startTime))
+
+	startTime = time.Now()
+	//part2(text)
+	fmt.Println("Part 2 took:", time.Since(startTime))
 }
 
 func part1(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	rules := map[string]string{}
+	part2 := 0
+	for i, line := range text {
+		if line == "" {
+			part2 = i
+			break
 		}
-
+		s := strings.Split(line, " ")
+		key := strings.Split(s[0], ":")[0]
+		tempString := "( "
+		for _, v := range s[1:] {
+			if v != "|" {
+				tempString += v + " "
+			} else {
+				tempString += ") | ( "
+			}
+		}
+		tempString += ")"
+		rules[key] = tempString
 	}
-	fmt.Println(counter)
+	fmt.Println(rules)
+	for {
+		newRules := make(map[string]string)
+		hasChanged := false
+		for k, v := range rules {
+			replacementString := ""
+			for _, v3 := range strings.Split(v, " ") {
+				if v3 != "\"a\"" && v3 != "\"b\"" &&
+					v3 != "(" && v3 != ")" &&
+					v3 != "|" && v3 != "" {
+					replacementString += rules[v3]
+					hasChanged = true
+				}
+				if v3 == "\"a\"" {
+					replacementString += " \"a\" "
+				}
+				if v3 == "\"b\"" {
+					replacementString += " \"b\" "
+				}
+				if v3 == "|" {
+					replacementString += " | "
+				}
+			}
+			newRules[k] = replacementString
+			//fmt.Println(newRules)
+		}
+		rules = newRules
+		if !hasChanged {
+			break
+		}
+	}
+	fmt.Println(rules)
+	for i, line := range text[part2:] {
+		if string(i) == string(line[0]) {
+			continue
+		}
+	}
+
 }
 
 func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
-
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
-
+	spoken, last := map[int]int{}, 0
+	for i, s := range strings.Split(strings.TrimSpace(string(text[0])), ",") {
+		last, _ = strconv.Atoi(s)
+		spoken[last] = i + 1
 	}
-	fmt.Println(counter)
+
+	for i := len(spoken); i < 30000000; i++ {
+		if v, ok := spoken[last]; ok {
+			spoken[last], last = i, i-v
+		} else {
+			spoken[last], last = i, 0
+		}
+
+		if i == 30000000-1 {
+			fmt.Println(last)
+		}
+	}
 }

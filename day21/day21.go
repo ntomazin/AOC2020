@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day15_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -43,49 +44,55 @@ func main() {
 	// on the os.File object to close the file
 	file.Close()
 
+	startTime := time.Now()
 	part1(text)
+	fmt.Println("Part 1 took:", time.Since(startTime))
+
+	startTime = time.Now()
 	part2(text)
+	fmt.Println("Part 2 took:", time.Since(startTime))
 }
 
 func part1(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+	spoken, last := map[int]int{}, 0
+	for i, s := range strings.Split(strings.TrimSpace(string(text[0])), ",") {
+		last, _ = strconv.Atoi(s)
+		spoken[last] = i + 1
+	}
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+	for i := len(spoken); i < 2020; i++ {
+		if v, ok := spoken[last]; ok {
+			spoken[last], last = i, i-v
+		} else {
+			spoken[last], last = i, 0
 		}
 
+		if i == 2020-1 {
+			fmt.Println(last)
+
+		}
 	}
-	fmt.Println(counter)
+
 }
 
 func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
-	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
-
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
-
+	spoken, last := map[int]int{}, 0
+	for i, s := range strings.Split(strings.TrimSpace(string(text[0])), ",") {
+		last, _ = strconv.Atoi(s)
+		spoken[last] = i + 1
 	}
-	fmt.Println(counter)
+
+	for i := len(spoken); i < 30000000; i++ {
+		if v, ok := spoken[last]; ok {
+			spoken[last], last = i, i-v
+		} else {
+			spoken[last], last = i, 0
+		}
+
+		if i == 30000000-1 {
+			fmt.Println(last)
+		}
+	}
 }

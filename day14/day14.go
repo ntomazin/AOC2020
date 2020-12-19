@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	// os.Open() opens specific file in
 	// read-only mode and this return
 	// a pointer of type os.
-	file, err := os.Open("day2_in")
+	file, err := os.Open("day14_in")
 
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -42,50 +42,144 @@ func main() {
 	// The method os.File.Close() is called
 	// on the os.File object to close the file
 	file.Close()
-
+	startTime := time.Now()
 	part1(text)
+	fmt.Println("Part 1 took:", time.Since(startTime))
+
+	startTime = time.Now()
 	part2(text)
+	fmt.Println("Part 2 took:", time.Since(startTime))
 }
 
 func part1(text []string) {
 	// and then a loop iterates through
 	// and prints each of the slice values.
-	counter := 0
+	memory := make(map[int]uint64)
+	var mask string
 	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
+		s := strings.Split(each_ln1, "=")
+		if s[0] == "mask " {
+			mask = s[1][1:len(s[1])]
+		} else {
+			memIdx := 0
+			var toSet uint64 = 0
+			if n, err := fmt.Sscanf(each_ln1, "mem[%d] = %d", &memIdx, &toSet); n != 2 || err != nil {
+				panic(fmt.Sprint(n, err))
+			}
 
-		if strings.Count(password, letter) >= num1 && strings.Count(password, letter) <= num2 {
-			counter++
+			memory[memIdx] = applyMask(mask, toSet)
 		}
-
 	}
-	fmt.Println(counter)
+	var total uint64 = 0
+	for _, v := range memory {
+		total += v
+	}
+	fmt.Println(total)
 }
 
 func part2(text []string) {
-	// and then a loop iterates through
-	// and prints each of the slice values.
-	counter := 0
+	memory := make(map[uint64]uint64)
+	mask := ""
+	masks := []maskWithFloats{}
 	for _, each_ln1 := range text {
-		s := strings.Split(each_ln1, " ")
-		num := strings.Split(s[0], "-")
-		letter := strings.Split(s[1], ":")[0]
-		password := s[2]
-		num1, _ := strconv.Atoi(num[0])
-		num2, _ := strconv.Atoi(num[1])
-		if string(password[num1-1]) == letter || string(password[num2-1]) == letter {
-			counter++
-		}
+		s := strings.Split(each_ln1, "=")
+		if s[0] == "mask " {
+			mask = s[1][1:len(s[1])]
+			masks = maskPermut(mask)
 
-		if string(password[num1-1]) == letter && string(password[num2-1]) == letter {
-			counter--
-		}
+		} else {
+			var memIdx uint64 = 0
+			var toSet uint64 = 0
+			if n, err := fmt.Sscanf(each_ln1, "mem[%d] = %d", &memIdx, &toSet); n != 2 || err != nil {
+				panic(fmt.Sprint(n, err))
+			}
 
+			for _, maska := range masks {
+				target := applyMaskP2(maska, memIdx)
+				memory[target] = toSet
+			}
+		}
 	}
-	fmt.Println(counter)
+	var total uint64 = 0
+	for _, v := range memory {
+		total += v
+	}
+	fmt.Println(total)
+}
+
+func applyMask(mask string, input uint64) uint64 {
+	for i, v := range mask {
+		switch v {
+		case 'X':
+		case '0':
+
+			input &= ^(1 << (35 - i))
+		case '1':
+			input |= (1 << (35 - i))
+		}
+	}
+	return input
+}
+
+func maskPermut(mask string) []maskWithFloats {
+	mask = strings.TrimPrefix(mask, "mask = ")
+	var out []maskWithFloats
+	num := strings.Count(mask, "X")
+	var realNum uint64 = 0xFFFFFFFFFFFFFFFF >> (64 - num)
+	printFMask := fmt.Sprintf("%%0%db", num)
+	nextMask := strings.Builder{}
+	nextMask.Grow(len(mask))
+	for i := 0; uint64(i) <= realNum; i++ {
+		bitCount := 0
+		bits := fmt.Sprintf(printFMask, i)
+		floats := [][2]int{}
+		for i, chr := range mask {
+			switch chr {
+			case 'X':
+				nextMask.WriteByte(bits[bitCount])
+				floats = append(floats, [2]int{35 - i, int(bits[bitCount]) - 48})
+				bitCount++
+			default:
+				nextMask.WriteRune(chr)
+			}
+		}
+
+		out = append(out, maskWithFloats{mask: nextMask.String(), floats: floats})
+		nextMask.Reset()
+	}
+
+	return out
+}
+
+func setBit(num uint64, target, bit int) uint64 {
+	switch bit {
+	case 0:
+		num &= ^(1 << target)
+	case 1:
+		num |= 1 << target
+	default:
+		panic("Tried to set a bit that is neither 0 nor 1")
+	}
+	return num
+}
+
+func applyMaskP2(mask maskWithFloats, input uint64) uint64 {
+	mask.mask = strings.TrimPrefix(mask.mask, "mask = ")
+	for i, v := range mask.mask {
+		switch v {
+		case '1':
+			input |= (1 << (35 - i))
+		}
+		for _, v := range mask.floats {
+			if v[0] == i {
+				input = setBit(input, v[0], v[1])
+			}
+		}
+	}
+	return input
+}
+
+type maskWithFloats struct {
+	mask   string
+	floats [][2]int
 }
